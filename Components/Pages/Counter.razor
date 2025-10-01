@@ -11,6 +11,30 @@
 
 <PageTitle>PII Detection & Redaction Blazor App</PageTitle>
 
+<style>
+    .pdf-viewer-container {
+        width: 100%;
+        height: 600px;
+        border: 1px solid #dee2e6;
+        border-radius: 0 0 0.375rem 0.375rem;
+        overflow: hidden;
+    }
+    
+    .pdf-viewer {
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+    }
+    
+    .pdf-viewer-container p {
+        text-align: center;
+        padding: 2rem;
+        margin: 0;
+        color: #6c757d;
+    }
+</style>
+
 <div class="container-fluid py-4">
     <h1 class="mb-4">
         <i class="bi bi-shield-check"></i> PII Detection & Redaction
@@ -154,6 +178,37 @@
                                         </div>
                                     </div>
                                 }
+                                
+                                <button class="btn btn-outline-primary ms-2 mt-2" @onclick="ViewRedactedPdf">
+                                    <i class="bi bi-file-earmark-pdf"></i> View Redacted PDF
+                                </button>
+                                
+                                @if (ShowPdfViewer && !string.IsNullOrEmpty(RedactedDocumentUrl))
+                                {
+                                    <div class="mt-3">
+                                        <div class="card">
+                                            <div class="card-header bg-light">
+                                                <h6 class="mb-0">
+                                                    <i class="bi bi-file-earmark-pdf"></i> Redacted PDF Document
+                                                    <button class="btn btn-sm btn-outline-secondary float-end" @onclick="HidePdfViewer">
+                                                        <i class="bi bi-x"></i> Hide
+                                                    </button>
+                                                </h6>
+                                            </div>
+                                            <div class="card-body p-0">
+                                                <div class="pdf-viewer-container">
+                                                    <iframe src="@RedactedDocumentUrl" 
+                                                            class="pdf-viewer"
+                                                            frameborder="0">
+                                                        <p>Your browser does not support PDFs. 
+                                                           <a href="@RedactedDocumentUrl" target="_blank">Download the PDF</a>.
+                                                        </p>
+                                                    </iframe>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
                             }
                             else if (JobStatus.Status.Equals("failed", StringComparison.OrdinalIgnoreCase))
                             {
@@ -189,6 +244,8 @@
     private bool ShowRedactedContent = false;
     private string RedactedContent = string.Empty;
     private string JobResultsJson = string.Empty;
+    private bool ShowPdfViewer = false;
+    private string RedactedDocumentUrl = string.Empty;
 
     protected override void OnInitialized()
     {
@@ -398,6 +455,92 @@
     private void HideRedactedResults()
     {
         ShowRedactedContent = false;
+        StateHasChanged();
+    }
+
+    private async Task ViewRedactedPdf()
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(CurrentJobId))
+            {
+                StatusMessage = "Loading redacted PDF...";
+                StateHasChanged();
+                
+                var blobUrl = await PiiDetectionService.GetRedactedDocumentUrlAsync(CurrentJobId) ?? string.Empty;
+                
+                if (!string.IsNullOrEmpty(blobUrl))
+                {
+                    // Extract container name and blob name from the Azure blob URL
+                    var (containerName, blobName) = ExtractBlobInfo(blobUrl);
+                    
+                    if (!string.IsNullOrEmpty(containerName) && !string.IsNullOrEmpty(blobName))
+                    {
+                        // Use our controller endpoint instead of direct blob URL
+                        RedactedDocumentUrl = $"/api/pdf/view/{containerName}/{Uri.EscapeDataString(blobName)}";
+                        ShowPdfViewer = true;
+                        StatusMessage = "PDF loaded successfully.";
+                    }
+                    else
+                    {
+                        StatusMessage = "Invalid blob URL format.";
+                    }
+                }
+                else
+                {
+                    StatusMessage = "No redacted PDF found for this job.";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error loading redacted PDF: {ex.Message}";
+        }
+        
+        StateHasChanged();
+    }
+
+    private (string containerName, string blobName) ExtractBlobInfo(string blobUrl)
+    {
+        try
+        {
+            StatusMessage = $"Parsing blob URL: {blobUrl}";
+            
+            var uri = new Uri(blobUrl);
+            var pathSegments = uri.AbsolutePath.TrimStart('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+            
+            StatusMessage = $"Path segments: {string.Join(", ", pathSegments)}";
+            
+            if (pathSegments.Length >= 2)
+            {
+                var containerName = pathSegments[0];
+                var blobName = string.Join("/", pathSegments.Skip(1));
+                
+                // Remove any query parameters from the blob name
+                if (blobName.Contains('?'))
+                {
+                    blobName = blobName.Substring(0, blobName.IndexOf('?'));
+                }
+                
+                StatusMessage = $"Extracted - Container: {containerName}, Blob: {blobName}";
+                return (containerName, blobName);
+            }
+            else
+            {
+                StatusMessage = $"Invalid URL format. Expected at least 2 path segments, got {pathSegments.Length}";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error parsing blob URL: {ex.Message}";
+        }
+        
+        return (string.Empty, string.Empty);
+    }
+
+    private void HidePdfViewer()
+    {
+        ShowPdfViewer = false;
         StateHasChanged();
     }
 

@@ -140,15 +140,28 @@ public class BlobStorageService : IBlobStorageService
     {
         try
         {
+            _logger.LogInformation("Attempting to download blob: {BlobName} from container: {ContainerName}", blobName, containerName);
+            
             var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
             var blobClient = containerClient.GetBlobClient(blobName);
 
+            // Check if blob exists first
+            var exists = await blobClient.ExistsAsync();
+            if (!exists.Value)
+            {
+                _logger.LogWarning("Blob {BlobName} does not exist in container {ContainerName}", blobName, containerName);
+                throw new FileNotFoundException($"Blob '{blobName}' not found in container '{containerName}'");
+            }
+
+            _logger.LogInformation("Blob exists, downloading: {BlobName}", blobName);
             var response = await blobClient.DownloadStreamingAsync();
+            
+            _logger.LogInformation("Successfully downloaded blob: {BlobName}, Content length: {ContentLength}", blobName, response.Value.Details.ContentLength);
             return response.Value.Content;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to download blob {BlobName} from container {ContainerName}", blobName, containerName);
+            _logger.LogError(ex, "Failed to download blob {BlobName} from container {ContainerName}. Error: {ErrorMessage}", blobName, containerName, ex.Message);
             throw;
         }
     }
