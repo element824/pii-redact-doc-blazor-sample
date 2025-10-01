@@ -11,84 +11,385 @@
 
 <PageTitle>PII Detection & Redaction Blazor App</PageTitle>
 
-<style>
-    .pdf-viewer-container {
-        width: 100%;
-        height: 600px;
-        border: 1px solid #dee2e6;
-        border-radius: 0 0 0.375rem 0.375rem;
-        overflow: hidden;
-    }
-    
-    .pdf-viewer {
-        width: 100%;
-        height: 100%;
-        border: none;
-        display: block;
-    }
-    
-    .pdf-viewer-container p {
-        text-align: center;
-        padding: 2rem;
-        margin: 0;
-        color: #6c757d;
-    }
-</style>
-
 <div class="container-fluid py-4">
-    <h1 class="mb-4">
-        <i class="bi bi-shield-check"></i> PII Detection & Redaction
-    </h1>
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <h1 class="text-center mb-4">
+                <i class="bi bi-shield-check text-primary"></i> PII Detection & Redaction
+            </h1>
+            <p class="text-center text-muted mb-5">
+                Automatically detect and redact personally identifiable information from PDF documents using Azure AI
+            </p>
+        </div>
+    </div>
 
-    <div class="row">
-        <div class="col-lg-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-cloud-upload"></i> Upload PDF Document
-                    </h5>
-                </div>
-                <div class="card-body">
-                    @if (!IsProcessing)
-                    {
-                        <div class="mb-3">
-                            <label for="fileInput" class="form-label">Select PDF file to process:</label>
-                            <InputFile id="fileInput" OnChange="HandleFileSelected" accept=".pdf" class="form-control" />
-                        </div>
+    <!-- Process Steps -->
+    <div class="process-steps mb-5">
+        <div class="process-step @(GetStepClass(1))">
+            <div class="process-step-icon">📄</div>
+            <div class="process-step-title">Upload PDF</div>
+            <div class="process-step-description">Select document</div>
+        </div>
+        <div class="process-step @(GetStepClass(2))">
+            <div class="process-step-icon">⚙️</div>
+            <div class="process-step-title">Process</div>
+            <div class="process-step-description">Detect PII</div>
+        </div>
+        <div class="process-step @(GetStepClass(3))">
+            <div class="process-step-icon">🔍</div>
+            <div class="process-step-title">Review</div>
+            <div class="process-step-description">View results</div>
+        </div>
+        <div class="process-step @(GetStepClass(4))">
+            <div class="process-step-icon">📋</div>
+            <div class="process-step-title">Download</div>
+            <div class="process-step-description">Get redacted PDF</div>
+        </div>
+    </div>
 
-                        <div class="mb-3">
-                            <label for="sourceContainer" class="form-label">Source Container:</label>
-                            <input @bind="SourceContainer" id="sourceContainer" class="form-control" placeholder="piisource" />
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="targetContainer" class="form-label">Target Container:</label>
-                            <input @bind="TargetContainer" id="targetContainer" class="form-control" placeholder="piitarget" />
-                        </div>
-
-                        <button class="btn btn-primary" @onclick="ProcessDocument" disabled="@(SelectedFile == null)">
-                            <i class="bi bi-play-circle"></i> Process Document
-                        </button>
-                    }
-                    else
-                    {
-                        <div class="text-center">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Processing...</span>
+    <!-- Main Content -->
+    @if (CurrentStep == 1)
+    {
+        <!-- Step 1: Upload PDF -->
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-lg border-0">
+                    <div class="card-header bg-primary text-white text-center py-4">
+                        <h4 class="mb-0">
+                            <i class="bi bi-cloud-upload"></i> Step 1: Upload Your PDF Document
+                        </h4>
+                        <p class="mb-0 mt-2 opacity-75">Select a PDF file to scan for personally identifiable information</p>
+                    </div>
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <div class="upload-zone border-dashed p-5 rounded @(SelectedFile != null ? "border-success bg-light-success" : "border-secondary")">
+                                @if (SelectedFile == null)
+                                {
+                                    <i class="bi bi-file-earmark-pdf display-1 text-muted mb-3"></i>
+                                    <h5>Drag and drop your PDF here</h5>
+                                    <p class="text-muted">or click to browse</p>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-file-earmark-pdf-fill display-1 text-success mb-3"></i>
+                                    <h5 class="text-success">@SelectedFile.Name</h5>
+                                    <p class="text-muted">@FormatFileSize(SelectedFile.Size)</p>
+                                }
+                                <InputFile id="fileInput" OnChange="HandleFileSelected" accept=".pdf" class="form-control" />
                             </div>
-                            <p class="mt-2">Processing document...</p>
                         </div>
-                    }
 
-                    @if (!string.IsNullOrEmpty(StatusMessage))
-                    {
-                        <div class="alert @(StatusMessage.Contains("Error") ? "alert-danger" : "alert-info") mt-3">
-                            @StatusMessage
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="sourceContainer" class="form-label fw-bold">Source Container</label>
+                                <input @bind="SourceContainer" id="sourceContainer" class="form-control" placeholder="piisource" />
+                                <small class="text-muted">Where to upload the original PDF</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="targetContainer" class="form-label fw-bold">Target Container</label>
+                                <input @bind="TargetContainer" id="targetContainer" class="form-control" placeholder="piitarget" />
+                                <small class="text-muted">Where to save the redacted PDF</small>
+                            </div>
                         </div>
-                    }
+
+                        <div class="text-center">
+                            <button class="btn btn-primary btn-lg px-5" @onclick="ProcessDocument" disabled="@(SelectedFile == null || IsProcessing)">
+                                @if (IsProcessing)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                    <span>Processing...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-play-circle me-2"></i>
+                                    <span>Start PII Detection</span>
+                                }
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+    }
+    else if (CurrentStep == 2)
+    {
+        <!-- Step 2: Processing -->
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-lg border-0">
+                    <div class="card-header bg-warning text-dark text-center py-4">
+                        <h4 class="mb-0">
+                            <i class="bi bi-gear-fill"></i> Step 2: Processing Document
+                        </h4>
+                        <p class="mb-0 mt-2">Analyzing your document for personally identifiable information...</p>
+                    </div>
+                    <div class="card-body p-5 text-center">
+                        <div class="mb-4">
+                            <div class="spinner-border text-warning" style="width: 4rem; height: 4rem;" role="status">
+                                <span class="visually-hidden">Processing...</span>
+                            </div>
+                        </div>
+                        
+                        @if (JobStatus != null)
+                        {
+                            <h5 class="mb-3">Job Status: @JobStatus.Status.ToUpperInvariant()</h5>
+                            
+                            @if (JobStatus.Tasks.Total > 0)
+                            {
+                                <div class="progress mb-3" style="height: 10px;">
+                                    <div class="progress-bar @GetProgressBarClass(JobStatus.Status)" 
+                                         role="progressbar" 
+                                         style="width: @GetProgressPercentage()%" 
+                                         aria-valuenow="@GetProgressPercentage()" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                                <p class="text-muted">
+                                    Completed: @JobStatus.Tasks.Completed / @JobStatus.Tasks.Total tasks
+                                </p>
+                            }
+                            
+                            <div class="mt-4">
+                                <small class="text-muted">
+                                    Job ID: <code>@CurrentJobId</code><br/>
+                                    Started: @FormatDateTime(JobStatus.CreatedDateTime)
+                                </small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (CurrentStep >= 3)
+    {
+        <!-- Step 3: Results Tab Interface -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-lg border-0">
+                    <div class="card-header bg-success text-white">
+                        <div class="d-flex justify-content-between align-items-center py-3">
+                            <div>
+                                <h4 class="mb-0">
+                                    <i class="bi bi-check-circle"></i> Processing Complete!
+                                </h4>
+                                <p class="mb-0 mt-1 opacity-75">Your document has been successfully processed and is ready for review</p>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-outline-light btn-sm" @onclick="StartNewProcess">
+                                    <i class="bi bi-arrow-left"></i> Process New Document
+                                </button>
+                                <button class="btn btn-outline-light btn-sm" @onclick="DownloadResultsJson">
+                                    <i class="bi bi-download"></i> Download JSON
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tab Navigation -->
+                    <div class="card-body p-0">
+                        <nav class="nav nav-tabs border-bottom" id="reviewTabs" role="tablist">
+                            <button class="nav-link @(ActiveTab == "pdf" ? "active" : "")" 
+                                    id="pdf-tab" 
+                                    @onclick="@(() => SetActiveTab("pdf"))"
+                                    type="button" 
+                                    role="tab">
+                                <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                                Redacted PDF
+                            </button>
+                            <button class="nav-link @(ActiveTab == "text" ? "active" : "")" 
+                                    id="text-tab" 
+                                    @onclick="@(() => SetActiveTab("text"))"
+                                    type="button" 
+                                    role="tab">
+                                <i class="bi bi-file-text text-info me-2"></i>
+                                Extracted Text
+                            </button>
+                            <button class="nav-link @(ActiveTab == "summary" ? "active" : "")" 
+                                    id="summary-tab" 
+                                    @onclick="@(() => SetActiveTab("summary"))"
+                                    type="button" 
+                                    role="tab">
+                                <i class="bi bi-clipboard-data text-warning me-2"></i>
+                                Processing Summary
+                            </button>
+                        </nav>
+                        
+                        <!-- Tab Content -->
+                        <div class="tab-content" id="reviewTabsContent">
+                            <!-- PDF Tab -->
+                            @if (ActiveTab == "pdf")
+                            {
+                                <div class="tab-pane fade show active" id="pdf" role="tabpanel">
+                                    @if (!string.IsNullOrEmpty(RedactedDocumentUrl))
+                                    {
+                                        <div class="d-flex justify-content-between align-items-center p-3 bg-light border-bottom">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                                                <span class="fw-semibold">Redacted Document</span>
+                                                <span class="badge bg-success ms-2">Ready</span>
+                                            </div>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-sm btn-outline-primary" @onclick="ToggleFullscreen">
+                                                    <i class="bi bi-arrows-fullscreen"></i> Fullscreen
+                                                </button>
+                                                <a href="@RedactedDocumentUrl" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                                    <i class="bi bi-download"></i> Download
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="pdf-viewer-container-full">
+                                            <iframe src="@RedactedDocumentUrl" 
+                                                    class="pdf-viewer-full"
+                                                    frameborder="0"
+                                                    title="Redacted PDF Document">
+                                                <div class="text-center p-5">
+                                                    <div class="alert alert-warning">
+                                                        <i class="bi bi-exclamation-triangle"></i>
+                                                        <strong>PDF Viewer Not Supported</strong>
+                                                        <p class="mb-2">Your browser does not support inline PDF viewing.</p>
+                                                        <a href="@RedactedDocumentUrl" target="_blank" class="btn btn-primary">
+                                                            <i class="bi bi-download"></i> Download PDF Instead
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </iframe>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="text-center p-5">
+                                            <div class="spinner-border text-primary mb-3" role="status">
+                                                <span class="visually-hidden">Loading PDF...</span>
+                                            </div>
+                                            <h5>Preparing PDF Document</h5>
+                                            <p class="text-muted">Please wait while we retrieve your redacted document...</p>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            
+                            <!-- Text Tab -->
+                            @if (ActiveTab == "text")
+                            {
+                                <div class="tab-pane fade show active" id="text" role="tabpanel">
+                                    <div class="p-4">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-file-text text-info me-2"></i>
+                                                <span class="fw-semibold">Extracted & Redacted Text</span>
+                                            </div>
+                                            <button class="btn btn-sm btn-outline-secondary" @onclick="CopyTextToClipboard">
+                                                <i class="bi bi-clipboard"></i> Copy Text
+                                            </button>
+                                        </div>
+                                        
+                                        @if (!string.IsNullOrEmpty(RedactedContent))
+                                        {
+                                            <div class="card">
+                                                <div class="card-body">
+                                                    <pre class="mb-0 text-wrap" style="white-space: pre-wrap; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.5;">@RedactedContent</pre>
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="text-center py-5">
+                                                <button class="btn btn-primary" @onclick="LoadRedactedText">
+                                                    <i class="bi bi-eye"></i> Load Extracted Text
+                                                </button>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            
+                            <!-- Summary Tab -->
+                            @if (ActiveTab == "summary")
+                            {
+                                <div class="tab-pane fade show active" id="summary" role="tabpanel">
+                                    <div class="p-4">
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <h5 class="mb-3">
+                                                    <i class="bi bi-clipboard-data text-warning me-2"></i>
+                                                    Processing Summary
+                                                </h5>
+                                                
+                                                @if (JobStatus != null)
+                                                {
+                                                    <div class="row g-3">
+                                                        <div class="col-sm-6">
+                                                            <div class="card border-0 bg-light">
+                                                                <div class="card-body text-center">
+                                                                    <i class="bi bi-check-circle-fill text-success display-6"></i>
+                                                                    <h6 class="mt-2 mb-1">Status</h6>
+                                                                    <span class="badge bg-success">@JobStatus.Status.ToUpper()</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-6">
+                                                            <div class="card border-0 bg-light">
+                                                                <div class="card-body text-center">
+                                                                    <i class="bi bi-list-task text-info display-6"></i>
+                                                                    <h6 class="mt-2 mb-1">Tasks Completed</h6>
+                                                                    <strong>@JobStatus.Tasks.Completed / @JobStatus.Tasks.Total</strong>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <div class="card border-0 bg-light">
+                                                                <div class="card-body">
+                                                                    <h6 class="mb-3">Processing Timeline</h6>
+                                                                    <div class="d-flex justify-content-between small text-muted">
+                                                                        <span>
+                                                                            <i class="bi bi-play-circle me-1"></i>
+                                                                            Started: @FormatDateTime(JobStatus.CreatedDateTime)
+                                                                        </span>
+                                                                        <span>
+                                                                            <i class="bi bi-clock me-1"></i>
+                                                                            Updated: @FormatDateTime(JobStatus.LastUpdatedDateTime)
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                }
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="card border-0 bg-primary text-white">
+                                                    <div class="card-body">
+                                                        <h6 class="mb-3">
+                                                            <i class="bi bi-info-circle me-2"></i>
+                                                            Job Details
+                                                        </h6>
+                                                        <div class="small">
+                                                            <div class="mb-2">
+                                                                <strong>Job ID:</strong><br>
+                                                                <code class="text-light">@CurrentJobId</code>
+                                                            </div>
+                                                            <div class="mb-2">
+                                                                <strong>Source:</strong> @SourceContainer
+                                                            </div>
+                                                            <div class="mb-2">
+                                                                <strong>Target:</strong> @TargetContainer
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 
         <div class="col-lg-6">
             <div class="card shadow-sm">
@@ -229,7 +530,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    }
 </div>
 
 @code {
@@ -246,6 +547,8 @@
     private string JobResultsJson = string.Empty;
     private bool ShowPdfViewer = false;
     private string RedactedDocumentUrl = string.Empty;
+    private int CurrentStep = 1; // 1: Upload, 2: Processing, 3: Results
+    private string ActiveTab = "pdf"; // Default tab for results view
 
     protected override void OnInitialized()
     {
@@ -268,6 +571,7 @@
         try
         {
             IsProcessing = true;
+            CurrentStep = 2; // Move to processing step
             StatusMessage = "Uploading file to Azure Blob Storage...";
             StateHasChanged();
 
@@ -322,11 +626,17 @@
         {
             JobStatus = await PiiDetectionService.GetJobStatusAsync(CurrentJobId);
 
-            if (JobStatus.Status.Equals("succeeded", StringComparison.OrdinalIgnoreCase) ||
-                JobStatus.Status.Equals("failed", StringComparison.OrdinalIgnoreCase))
+            if (JobStatus.Status.Equals("succeeded", StringComparison.OrdinalIgnoreCase))
             {
                 StatusTimer?.Dispose();
                 StatusTimer = null;
+                CurrentStep = 3; // Move to results step
+            }
+            else if (JobStatus.Status.Equals("failed", StringComparison.OrdinalIgnoreCase))
+            {
+                StatusTimer?.Dispose();
+                StatusTimer = null;
+                CurrentStep = 1; // Return to upload step on failure
             }
 
             await InvokeAsync(StateHasChanged);
@@ -573,6 +883,89 @@
             return dateTime.ToString("yyyy-MM-dd HH:mm:ss");
         }
         return dateTimeString;
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1) {
+            order++;
+            len = len / 1024;
+        }
+        return $"{len:0.#} {sizes[order]}";
+    }
+
+    private void ToggleFullscreen()
+    {
+        // This could be enhanced with JavaScript to actually toggle fullscreen
+        // For now, just a placeholder
+        StateHasChanged();
+    }
+
+    private string GetStepClass(int stepNumber)
+    {
+        if (stepNumber < CurrentStep)
+            return "completed";
+        else if (stepNumber == CurrentStep)
+            return "active";
+        else
+            return "";
+    }
+
+    private void SetActiveTab(string tabName)
+    {
+        ActiveTab = tabName;
+        
+        // Auto-load content when switching to specific tabs
+        if (tabName == "pdf" && string.IsNullOrEmpty(RedactedDocumentUrl))
+        {
+            _ = Task.Run(async () => await ViewRedactedPdf());
+        }
+        else if (tabName == "text" && string.IsNullOrEmpty(RedactedContent))
+        {
+            _ = Task.Run(async () => await LoadRedactedText());
+        }
+        
+        StateHasChanged();
+    }
+
+    private void StartNewProcess()
+    {
+        // Reset all state
+        CurrentStep = 1;
+        ActiveTab = "pdf";
+        SelectedFile = null;
+        IsProcessing = false;
+        StatusMessage = string.Empty;
+        CurrentJobId = string.Empty;
+        JobStatus = null;
+        StatusTimer?.Dispose();
+        StatusTimer = null;
+        ShowRedactedContent = false;
+        RedactedContent = string.Empty;
+        JobResultsJson = string.Empty;
+        ShowPdfViewer = false;
+        RedactedDocumentUrl = string.Empty;
+        StateHasChanged();
+    }
+
+    private async Task LoadRedactedText()
+    {
+        if (string.IsNullOrEmpty(RedactedContent))
+        {
+            await ViewRedactedResults();
+        }
+    }
+
+    private async Task CopyTextToClipboard()
+    {
+        if (!string.IsNullOrEmpty(RedactedContent))
+        {
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", RedactedContent);
+            // Could show a toast notification here
+        }
     }
 
     public void Dispose()
