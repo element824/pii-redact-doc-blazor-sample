@@ -345,7 +345,69 @@ h1:focus {
 
 /* Improved alert styling */
 .alert-warning {
-  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-  border: 1px solid #ffc107;
-  border-radius: 12px;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border: 1px solid #ffc107;
+    border-radius: 12px;
+}
+
+/* Toast styling */
+.toast {
+    background: white;
+    border: 1px solid rgba(0,0,0,0.125);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    min-width: 320px;
+}
+
+.toast-header {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+    border-radius: 12px 12px 0 0 !important;
+    border-bottom: none;
+}
+
+.toast-body {
+    padding: 1rem;
+}
+
+/* Floating action button */
+.btn.rounded-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0,123,255,0.3);
+}
+
+.btn.rounded-circle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 25px rgba(0,123,255,0.4);
+}
+
+.btn.rounded-circle i {
+    font-size: 1.5rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Download cards */
+.card.border-success:hover,
+.card.border-info:hover,
+.card.border-warning:hover,
+.card.border-secondary:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+}
+
+.card .display-4 {
+    transition: transform 0.3s ease;
+}
+
+.card:hover .display-4 {
+    transform: scale(1.1);
 }

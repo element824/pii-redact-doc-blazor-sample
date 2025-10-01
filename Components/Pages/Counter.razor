@@ -214,6 +214,14 @@
                                 <i class="bi bi-clipboard-data text-warning me-2"></i>
                                 Processing Summary
                             </button>
+                            <button class="nav-link @(ActiveTab == "download" ? "active" : "")" 
+                                    id="download-tab" 
+                                    @onclick="@(() => SetActiveTab("download"))"
+                                    type="button" 
+                                    role="tab">
+                                <i class="bi bi-download text-success me-2"></i>
+                                Downloads
+                            </button>
                         </nav>
                         
                         <!-- Tab Content -->
@@ -265,6 +273,17 @@
                                             </div>
                                             <h5>Preparing PDF Document</h5>
                                             <p class="text-muted">Please wait while we retrieve your redacted document...</p>
+                                            @if (!string.IsNullOrEmpty(StatusMessage))
+                                            {
+                                                <div class="mt-3">
+                                                    <small class="text-info">Status: @StatusMessage</small>
+                                                </div>
+                                            }
+                                            <div class="mt-3">
+                                                <button class="btn btn-outline-primary" @onclick="ViewRedactedPdf">
+                                                    <i class="bi bi-arrow-clockwise"></i> Retry Loading PDF
+                                                </button>
+                                            </div>
                                         </div>
                                     }
                                 </div>
@@ -378,158 +397,168 @@
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            
+            <!-- Download Tab -->
+            @if (ActiveTab == "download")
+            {
+                <div class="tab-pane fade show active" id="download" role="tabpanel">
+                    <div class="p-4">
+                        <div class="row justify-content-center">
+                            <div class="col-md-8">
+                                <h5 class="text-center mb-4">
+                                    <i class="bi bi-download text-success me-2"></i>
+                                    Download Your Results
+                                </h5>
+                                
+                                <div class="row g-4">
+                                    <!-- Redacted PDF Download -->
+                                    <div class="col-md-6">
+                                        <div class="card h-100 border-success">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-file-earmark-pdf text-danger display-4 mb-3"></i>
+                                                <h6 class="card-title">Redacted PDF Document</h6>
+                                                <p class="card-text text-muted small">
+                                                    Download the processed PDF with PII information redacted
+                                                </p>
+                                                <button class="btn btn-success w-100" @onclick="DownloadRedactedPdf">
+                                                    <i class="bi bi-download me-2"></i>
+                                                    Download PDF
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- JSON Results Download -->
+                                    <div class="col-md-6">
+                                        <div class="card h-100 border-info">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-file-earmark-code text-info display-4 mb-3"></i>
+                                                <h6 class="card-title">Processing Results (JSON)</h6>
+                                                <p class="card-text text-muted small">
+                                                    Download the complete processing results in JSON format
+                                                </p>
+                                                <button class="btn btn-info w-100" @onclick="DownloadResultsJson">
+                                                    <i class="bi bi-download me-2"></i>
+                                                    Download JSON
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Text Results Download -->
+                                    <div class="col-md-6">
+                                        <div class="card h-100 border-warning">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-file-earmark-text text-warning display-4 mb-3"></i>
+                                                <h6 class="card-title">Redacted Text</h6>
+                                                <p class="card-text text-muted small">
+                                                    Download the extracted and redacted text content
+                                                </p>
+                                                <button class="btn btn-warning w-100" @onclick="DownloadRedactedText">
+                                                    <i class="bi bi-download me-2"></i>
+                                                    Download Text
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Processing Report -->
+                                    <div class="col-md-6">
+                                        <div class="card h-100 border-secondary">
+                                            <div class="card-body text-center">
+                                                <i class="bi bi-file-earmark-spreadsheet text-secondary display-4 mb-3"></i>
+                                                <h6 class="card-title">Processing Report</h6>
+                                                <p class="card-text text-muted small">
+                                                    Download a summary report of the processing job
+                                                </p>
+                                                <button class="btn btn-secondary w-100" @onclick="DownloadProcessingReport">
+                                                    <i class="bi bi-download me-2"></i>
+                                                    Download Report
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            }
+                            </div>
                         </div>
+                    </div>
+                </div>
+            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }    }
+
+    <!-- Toast Notification for Processing Status -->
+    @if (!string.IsNullOrEmpty(CurrentJobId) && ShowStatusToast && CurrentStep >= 2)
+    {
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+            <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header bg-primary text-white">
+                    <i class="bi bi-activity me-2"></i>
+                    <strong class="me-auto">Processing Status</strong>
+                    <button type="button" class="btn-close btn-close-white" @onclick="ToggleStatusToast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    @if (JobStatus != null)
+                    {
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small><strong>Status:</strong></small>
+                                <span class="badge @GetStatusBadgeClass(JobStatus.Status)">
+                                    @JobStatus.Status.ToUpperInvariant()
+                                </span>
+                            </div>
+                        </div>
+                        
+                        @if (JobStatus.Tasks.Total > 0)
+                        {
+                            <div class="progress mb-2" style="height: 8px;">
+                                <div class="progress-bar @GetProgressBarClass(JobStatus.Status)" 
+                                     role="progressbar" 
+                                     style="width: @GetProgressPercentage()%" 
+                                     aria-valuenow="@GetProgressPercentage()">
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                @JobStatus.Tasks.Completed / @JobStatus.Tasks.Total completed
+                            </small>
+                        }
+                        
+                        @if (JobStatus.Status.Equals("succeeded", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <div class="mt-2">
+                                <button class="btn btn-success btn-sm w-100" @onclick="() => { CurrentStep = 3; ToggleStatusToast(); }">
+                                    <i class="bi bi-eye"></i> View Results
+                                </button>
+                            </div>
+                        }
+                    }
+                    <div class="mt-2">
+                        <small class="text-muted">Job: @CurrentJobId.Substring(0, Math.Min(8, CurrentJobId.Length))...</small>
                     </div>
                 </div>
             </div>
         </div>
     }
 
-        <div class="col-lg-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-activity"></i> Processing Status
-                    </h5>
-                </div>
-                <div class="card-body">
-                    @if (!string.IsNullOrEmpty(CurrentJobId))
-                    {
-                        <div class="mb-3">
-                            <strong>Job ID:</strong> 
-                            <code class="text-muted">@CurrentJobId</code>
-                        </div>
-
-                        @if (JobStatus != null)
-                        {
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <span><strong>Status:</strong></span>
-                                    <span class="badge @GetStatusBadgeClass(JobStatus.Status)">
-                                        @JobStatus.Status.ToUpperInvariant()
-                                    </span>
-                                </div>
-                                
-                                @if (JobStatus.Tasks.Total > 0)
-                                {
-                                    <div class="progress mb-2">
-                                        <div class="progress-bar @GetProgressBarClass(JobStatus.Status)" 
-                                             role="progressbar" 
-                                             style="width: @GetProgressPercentage()%" 
-                                             aria-valuenow="@GetProgressPercentage()" 
-                                             aria-valuemin="0" 
-                                             aria-valuemax="100">
-                                        </div>
-                                    </div>
-                                    <small class="text-muted">
-                                        Completed: @JobStatus.Tasks.Completed / @JobStatus.Tasks.Total
-                                        @if (JobStatus.Tasks.Failed > 0)
-                                        {
-                                            <span class="text-danger"> | Failed: @JobStatus.Tasks.Failed</span>
-                                        }
-                                    </small>
-                                }
-
-                                <div class="mt-3">
-                                    <small class="text-muted">
-                                        <strong>Created:</strong> @FormatDateTime(JobStatus.CreatedDateTime)<br/>
-                                        <strong>Last Updated:</strong> @FormatDateTime(JobStatus.LastUpdatedDateTime)
-                                    </small>
-                                </div>
-                            </div>
-
-                            @if (JobStatus.Status.Equals("succeeded", StringComparison.OrdinalIgnoreCase))
-                            {
-                                <div class="alert alert-success">
-                                    <i class="bi bi-check-circle"></i> 
-                                    Processing completed successfully! Your redacted results are ready.
-                                </div>
-                                
-                                <button class="btn btn-success" @onclick="ViewRedactedResults">
-                                    <i class="bi bi-eye"></i> View Redacted Results
-                                </button>
-                                <button class="btn btn-outline-info ms-2" @onclick="DownloadResultsJson">
-                                    <i class="bi bi-download"></i> Download JSON Results
-                                </button>
-                                <button class="btn btn-info ms-2" @onclick="DownloadDocument">
-                                    <i class="bi bi-file-earmark-pdf"></i> Download Document
-                                </button>
-                                
-                                @if (ShowRedactedContent && !string.IsNullOrEmpty(RedactedContent))
-                                {
-                                    <div class="mt-3">
-                                        <div class="card">
-                                            <div class="card-header bg-light">
-                                                <h6 class="mb-0">
-                                                    <i class="bi bi-file-text"></i> Redacted Content
-                                                    <button class="btn btn-sm btn-outline-secondary float-end" @onclick="HideRedactedResults">
-                                                        <i class="bi bi-x"></i> Hide
-                                                    </button>
-                                                </h6>
-                                            </div>
-                                            <div class="card-body">
-                                                <pre class="bg-light p-3 rounded" style="max-height: 300px; overflow-y: auto; white-space: pre-wrap;">@RedactedContent</pre>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                                
-                                <button class="btn btn-outline-primary ms-2 mt-2" @onclick="ViewRedactedPdf">
-                                    <i class="bi bi-file-earmark-pdf"></i> View Redacted PDF
-                                </button>
-                                
-                                @if (ShowPdfViewer && !string.IsNullOrEmpty(RedactedDocumentUrl))
-                                {
-                                    <div class="mt-3">
-                                        <div class="card">
-                                            <div class="card-header bg-light">
-                                                <h6 class="mb-0">
-                                                    <i class="bi bi-file-earmark-pdf"></i> Redacted PDF Document
-                                                    <button class="btn btn-sm btn-outline-secondary float-end" @onclick="HidePdfViewer">
-                                                        <i class="bi bi-x"></i> Hide
-                                                    </button>
-                                                </h6>
-                                            </div>
-                                            <div class="card-body p-0">
-                                                <div class="pdf-viewer-container">
-                                                    <iframe src="@RedactedDocumentUrl" 
-                                                            class="pdf-viewer"
-                                                            frameborder="0">
-                                                        <p>Your browser does not support PDFs. 
-                                                           <a href="@RedactedDocumentUrl" target="_blank">Download the PDF</a>.
-                                                        </p>
-                                                    </iframe>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                            }
-                            else if (JobStatus.Status.Equals("failed", StringComparison.OrdinalIgnoreCase))
-                            {
-                                <div class="alert alert-danger">
-                                    <i class="bi bi-exclamation-triangle"></i> 
-                                    Processing failed. Please try again.
-                                </div>
-                            }
-                        }
-                    }
-                    else
-                    {
-                        <p class="text-muted text-center">
-                            <i class="bi bi-info-circle"></i> 
-                            No active job. Upload a document to start processing.
-                        </p>
-                    }
-                </div>
-            </div>
-        </div>
+    <!-- Status Toggle Button -->
+    @if (!string.IsNullOrEmpty(CurrentJobId) && !ShowStatusToast && CurrentStep >= 2)
+    {
+        <button class="btn btn-primary position-fixed bottom-0 end-0 m-3 rounded-circle shadow-lg" 
+                style="z-index: 1050; width: 60px; height: 60px;"
+                @onclick="ToggleStatusToast"
+                title="Show Processing Status">
+            <i class="bi bi-activity"></i>
+        </button>
     }
 </div>
 
@@ -549,6 +578,7 @@
     private string RedactedDocumentUrl = string.Empty;
     private int CurrentStep = 1; // 1: Upload, 2: Processing, 3: Results
     private string ActiveTab = "pdf"; // Default tab for results view
+    private bool ShowStatusToast = true; // Show toast by default when processing
 
     protected override void OnInitialized()
     {
@@ -572,6 +602,7 @@
         {
             IsProcessing = true;
             CurrentStep = 2; // Move to processing step
+            ShowStatusToast = true; // Show toast when processing starts
             StatusMessage = "Uploading file to Azure Blob Storage...";
             StateHasChanged();
 
@@ -631,6 +662,12 @@
                 StatusTimer?.Dispose();
                 StatusTimer = null;
                 CurrentStep = 3; // Move to results step
+                
+                // Auto-load PDF when moving to results step (since PDF is the default tab)
+                if (string.IsNullOrEmpty(RedactedDocumentUrl))
+                {
+                    _ = Task.Run(async () => await ViewRedactedPdf());
+                }
             }
             else if (JobStatus.Status.Equals("failed", StringComparison.OrdinalIgnoreCase))
             {
@@ -775,12 +812,21 @@
             if (!string.IsNullOrEmpty(CurrentJobId))
             {
                 StatusMessage = "Loading redacted PDF...";
-                StateHasChanged();
+                await InvokeAsync(StateHasChanged);
+                
+                StatusMessage = "Requesting redacted document URL from service...";
+                await InvokeAsync(StateHasChanged);
                 
                 var blobUrl = await PiiDetectionService.GetRedactedDocumentUrlAsync(CurrentJobId) ?? string.Empty;
                 
+                StatusMessage = $"Received blob URL: {(!string.IsNullOrEmpty(blobUrl) ? "Success" : "Empty")}";
+                await InvokeAsync(StateHasChanged);
+                
                 if (!string.IsNullOrEmpty(blobUrl))
                 {
+                    StatusMessage = "Extracting blob information...";
+                    await InvokeAsync(StateHasChanged);
+                    
                     // Extract container name and blob name from the Azure blob URL
                     var (containerName, blobName) = ExtractBlobInfo(blobUrl);
                     
@@ -789,25 +835,32 @@
                         // Use our controller endpoint instead of direct blob URL
                         RedactedDocumentUrl = $"/api/pdf/view/{containerName}/{Uri.EscapeDataString(blobName)}";
                         ShowPdfViewer = true;
-                        StatusMessage = "PDF loaded successfully.";
+                        StatusMessage = $"PDF ready: /api/pdf/view/{containerName}/{blobName}";
+                        await InvokeAsync(StateHasChanged);
                     }
                     else
                     {
-                        StatusMessage = "Invalid blob URL format.";
+                        StatusMessage = $"Invalid blob URL format. Container: '{containerName}', Blob: '{blobName}'";
+                        await InvokeAsync(StateHasChanged);
                     }
                 }
                 else
                 {
-                    StatusMessage = "No redacted PDF found for this job.";
+                    StatusMessage = "No redacted PDF found for this job. The document may still be processing.";
+                    await InvokeAsync(StateHasChanged);
                 }
+            }
+            else
+            {
+                StatusMessage = "No job ID available.";
+                await InvokeAsync(StateHasChanged);
             }
         }
         catch (Exception ex)
         {
             StatusMessage = $"Error loading redacted PDF: {ex.Message}";
+            await InvokeAsync(StateHasChanged);
         }
-        
-        StateHasChanged();
     }
 
     private (string containerName, string blobName) ExtractBlobInfo(string blobUrl)
@@ -914,21 +967,20 @@
             return "";
     }
 
-    private void SetActiveTab(string tabName)
+    private async void SetActiveTab(string tabName)
     {
         ActiveTab = tabName;
+        StateHasChanged();
         
         // Auto-load content when switching to specific tabs
         if (tabName == "pdf" && string.IsNullOrEmpty(RedactedDocumentUrl))
         {
-            _ = Task.Run(async () => await ViewRedactedPdf());
+            await ViewRedactedPdf();
         }
         else if (tabName == "text" && string.IsNullOrEmpty(RedactedContent))
         {
-            _ = Task.Run(async () => await LoadRedactedText());
+            await LoadRedactedText();
         }
-        
-        StateHasChanged();
     }
 
     private void StartNewProcess()
@@ -948,6 +1000,7 @@
         JobResultsJson = string.Empty;
         ShowPdfViewer = false;
         RedactedDocumentUrl = string.Empty;
+        ShowStatusToast = true;
         StateHasChanged();
     }
 
@@ -966,6 +1019,129 @@
             await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", RedactedContent);
             // Could show a toast notification here
         }
+    }
+
+    private void ToggleStatusToast()
+    {
+        ShowStatusToast = !ShowStatusToast;
+        StateHasChanged();
+    }
+
+    private async Task DownloadRedactedPdf()
+    {
+        try
+        {
+            StatusMessage = "Getting redacted document URL...";
+            StateHasChanged();
+
+            var documentUrl = await PiiDetectionService.GetRedactedDocumentUrlAsync(CurrentJobId);
+            
+            if (!string.IsNullOrEmpty(documentUrl))
+            {
+                // Use the controller endpoint for downloading
+                var (containerName, blobName) = ExtractBlobInfo(documentUrl);
+                
+                if (!string.IsNullOrEmpty(containerName) && !string.IsNullOrEmpty(blobName))
+                {
+                    var downloadUrl = $"/api/pdf/download/{containerName}/{Uri.EscapeDataString(blobName)}";
+                    await JSRuntime.InvokeAsync<object>("open", downloadUrl, "_blank");
+                    StatusMessage = "Redacted PDF download started.";
+                }
+                else
+                {
+                    StatusMessage = "Invalid document URL format.";
+                }
+            }
+            else
+            {
+                StatusMessage = "No redacted document URL found.";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error downloading PDF: {ex.Message}";
+        }
+        
+        StateHasChanged();
+    }
+
+    private async Task DownloadRedactedText()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(RedactedContent))
+            {
+                await LoadRedactedText();
+            }
+
+            if (!string.IsNullOrEmpty(RedactedContent))
+            {
+                var fileName = $"redacted_text_{CurrentJobId}.txt";
+                var bytes = System.Text.Encoding.UTF8.GetBytes(RedactedContent);
+                var base64 = Convert.ToBase64String(bytes);
+                var dataUrl = $"data:text/plain;base64,{base64}";
+
+                await JSRuntime.InvokeVoidAsync("downloadFile", dataUrl, fileName);
+                StatusMessage = "Redacted text downloaded successfully.";
+            }
+            else
+            {
+                StatusMessage = "No redacted text content available.";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error downloading text: {ex.Message}";
+        }
+        
+        StateHasChanged();
+    }
+
+    private async Task DownloadProcessingReport()
+    {
+        try
+        {
+            if (JobStatus == null)
+            {
+                StatusMessage = "No job status available for report.";
+                return;
+            }
+
+            var report = $@"PII Redaction Processing Report
+=====================================
+
+Job ID: {CurrentJobId}
+Status: {JobStatus.Status}
+Created: {FormatDateTime(JobStatus.CreatedDateTime)}
+Last Updated: {FormatDateTime(JobStatus.LastUpdatedDateTime)}
+
+Task Summary:
+- Total Tasks: {JobStatus.Tasks.Total}
+- Completed: {JobStatus.Tasks.Completed}
+- Failed: {JobStatus.Tasks.Failed}
+- In Progress: {JobStatus.Tasks.InProgress}
+
+Configuration:
+- Source Container: {SourceContainer}
+- Target Container: {TargetContainer}
+
+Generated on: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
+";
+
+            var fileName = $"pii_processing_report_{CurrentJobId}.txt";
+            var bytes = System.Text.Encoding.UTF8.GetBytes(report);
+            var base64 = Convert.ToBase64String(bytes);
+            var dataUrl = $"data:text/plain;base64,{base64}";
+
+            await JSRuntime.InvokeVoidAsync("downloadFile", dataUrl, fileName);
+            StatusMessage = "Processing report downloaded successfully.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error generating report: {ex.Message}";
+        }
+        
+        StateHasChanged();
     }
 
     public void Dispose()
