@@ -41,7 +41,7 @@ This sample code is provided for educational and demonstration purposes only. Wh
   - Credit card numbers
   - IP addresses and dates
   - Physical addresses
-- **Document Redaction**: Automatic masking of detected PII entities directly in PDF format
+- **Document Redaction**: Automatic masking of detected PII entities directly in PDF format using configurable [PiiTaskParameters](https://learn.microsoft.com/en-us/azure/ai-services/language-service/personally-identifiable-information/how-to/redact-document-pii#request-body)
 - **Dual Output**: Both JSON analysis results and redacted PDF documents
 - **Secure Download**: Direct access to redacted documents via secure SAS URLs
 
@@ -71,7 +71,7 @@ This application implements Microsoft's preview feature for **native document PI
 
 ```bash
 git clone <repository-url>
-cd pii-manual/src
+cd pii-redact-doc-blazor-sample
 dotnet restore
 ```
 
@@ -79,10 +79,10 @@ dotnet restore
 
 ⚠️ **Security Note**: This project uses User Secrets to keep Azure credentials secure and out of version control.
 
-The Azure credentials are already configured in User Secrets for this development environment:
+You will need to configure your own Azure credentials for this application:
 
-- **Azure Storage Account**: `knpersonalraw01`
-- **AI Foundry Language Service Endpoint**: `https://knlanguage01.cognitiveservices.azure.com`
+- **Azure Storage Account**: Your storage account name
+- **AI Foundry Language Service Endpoint**: Your Language Service endpoint
 - **API Version**: `2024-11-15-preview` (Preview API for document PII redaction)
 
 > **Important**: This application requires an Azure AI Foundry Language Service resource with document-level PII redaction capabilities enabled.
@@ -110,12 +110,12 @@ dotnet user-secrets list
 
 ### 3. Azure Storage Containers
 
-The application uses the following containers in the `knpersonalraw01` storage account:
+The application uses the following containers in your Azure storage account:
 
 - **`piisource`** - for uploaded PDF documents (source files)
 - **`piitarget`** - for redacted PDF documents (processed output)
 
-These containers should already exist in the configured storage account. If you're using your own storage account, create these containers with private access level.
+Create these containers in your Azure storage account with private access level.
 
 ### 4. Verify Setup
 
@@ -135,7 +135,7 @@ dotnet run
 ## Running the Application
 
 ```bash
-cd src
+cd pii-redact-doc-blazor-sample
 dotnet run
 ```
 
@@ -151,7 +151,7 @@ The application will be available at `http://localhost:5186`
 ## Project Structure
 
 ```
-src/
+pii-redact-doc-blazor-sample/
 ├── Components/
 │   ├── Layout/           # Application layout components
 │   └── Pages/            # Blazor pages including PiiRedaction.razor
