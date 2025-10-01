@@ -12,7 +12,22 @@ A modern web application built with Blazor Server for detecting and redacting Pe
 
 This application demonstrates the implementation of Microsoft's **"Detect and redact Personally Identifying Information in native documents"** feature from Azure AI Services Language Service.
 
-📖 **Official Documentation**: [Detect and redact Personally Identifying Information in native documents (preview)](https://learn.microsoft.com/en-us/azure/ai-services/language-service/personally-identifiable-information/how-to/redact-document-pii)
+## Official Documentation
+
+This sample is based on the official Microsoft documentation: [Detect and redact Personally Identifying Information in native documents (preview)](https://learn.microsoft.com/en-us/azure/ai-services/language-service/personally-identifiable-information/how-to/redact-document-pii)
+
+## Disclaimer
+
+This sample code is provided for educational and demonstration purposes only. While created by a Microsoft employee based on official Azure AI Services documentation, this repository represents personal work and is not an official Microsoft product or service.
+
+**Important Notes:**
+
+- This code is provided "as-is" without warranty of any kind
+- Microsoft does not provide official support for this sample
+- Users are responsible for testing and validating the code in their own environments
+- Always follow your organization's security and compliance policies when handling PII data
+- Ensure proper data governance and privacy compliance (GDPR, CCPA, etc.) when processing personal information
+- For official support and documentation, please refer to the Azure AI Services documentation.
 
 ## Features
 
