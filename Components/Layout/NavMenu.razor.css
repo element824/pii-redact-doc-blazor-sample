@@ -1,18 +1,18 @@
 .navbar-brand {
-    font-size: 1.3rem;
-    font-weight: 600;
+  font-size: 1.3rem;
+  font-weight: 600;
 }
 
 nav.navbar {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .nav-link {
-    color: rgba(255, 255, 255, 0.85) !important;
-    text-decoration: none;
+  color: rgba(255, 255, 255, 0.85) !important;
+  text-decoration: none;
 }
 
 .nav-link:hover {
-    color: white !important;
-    text-decoration: underline;
+  color: white !important;
+  text-decoration: underline;
 }
