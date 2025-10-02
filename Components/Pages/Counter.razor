@@ -235,7 +235,7 @@
                                         <div class="d-flex justify-content-between align-items-center p-3 bg-light border-bottom">
                                             <div class="d-flex align-items-center">
                                                 <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
-                                                <span class="fw-semibold">Redacted Document</span>
+                                                <span class="fw-semibold">Document Comparison</span>
                                                 <span class="badge bg-success ms-2">Ready</span>
                                             </div>
                                             <div class="d-flex gap-2">
@@ -243,26 +243,77 @@
                                                     <i class="bi bi-arrows-fullscreen"></i> Fullscreen
                                                 </button>
                                                 <a href="@RedactedDocumentUrl" target="_blank" class="btn btn-sm btn-outline-secondary">
-                                                    <i class="bi bi-download"></i> Download
+                                                    <i class="bi bi-download"></i> Download Redacted
                                                 </a>
+                                                @if (!string.IsNullOrEmpty(SourceDocumentUrl))
+                                                {
+                                                    <a href="@SourceDocumentUrl" target="_blank" class="btn btn-sm btn-outline-info">
+                                                        <i class="bi bi-download"></i> Download Original
+                                                    </a>
+                                                }
                                             </div>
                                         </div>
-                                        <div class="pdf-viewer-container-full">
-                                            <iframe src="@RedactedDocumentUrl" 
-                                                    class="pdf-viewer-full"
-                                                    frameborder="0"
-                                                    title="Redacted PDF Document">
-                                                <div class="text-center p-5">
-                                                    <div class="alert alert-warning">
-                                                        <i class="bi bi-exclamation-triangle"></i>
-                                                        <strong>PDF Viewer Not Supported</strong>
-                                                        <p class="mb-2">Your browser does not support inline PDF viewing.</p>
-                                                        <a href="@RedactedDocumentUrl" target="_blank" class="btn btn-primary">
-                                                            <i class="bi bi-download"></i> Download PDF Instead
-                                                        </a>
+                                        <!-- Side-by-side PDF viewer -->
+                                        <div class="pdf-comparison-container">
+                                            <div class="row g-0 h-100">
+                                                <!-- Original Document -->
+                                                <div class="col-md-6 border-end">
+                                                    <div class="pdf-section-header">
+                                                        <i class="bi bi-file-earmark-pdf text-primary me-2"></i>
+                                                        <span class="fw-semibold">Original Document</span>
+                                                    </div>
+                                                    @if (!string.IsNullOrEmpty(SourceDocumentUrl))
+                                                    {
+                                                        <div class="pdf-viewer-container-comparison">
+                                                            <iframe src="@SourceDocumentUrl" 
+                                                                    class="pdf-viewer-comparison"
+                                                                    frameborder="0"
+                                                                    title="Original PDF Document">
+                                                                <div class="text-center p-3">
+                                                                    <div class="alert alert-warning">
+                                                                        <p class="mb-2">PDF viewer not supported.</p>
+                                                                        <a href="@SourceDocumentUrl" target="_blank" class="btn btn-sm btn-primary">Download Original</a>
+                                                                    </div>
+                                                                </div>
+                                                            </iframe>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="pdf-viewer-container-comparison d-flex align-items-center justify-content-center">
+                                                            <div class="text-center">
+                                                                <div class="spinner-border text-primary mb-2" role="status"></div>
+                                                                <p class="text-muted small">Loading original...</p>
+                                                                <button class="btn btn-sm btn-outline-primary" @onclick="LoadSourceDocument">
+                                                                    <i class="bi bi-arrow-clockwise"></i> Load Original
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                                
+                                                <!-- Redacted Document -->
+                                                <div class="col-md-6">
+                                                    <div class="pdf-section-header">
+                                                        <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                                                        <span class="fw-semibold">Redacted Document</span>
+                                                        <span class="badge bg-success ms-2 small">PII Removed</span>
+                                                    </div>
+                                                    <div class="pdf-viewer-container-comparison">
+                                                        <iframe src="@RedactedDocumentUrl" 
+                                                                class="pdf-viewer-comparison"
+                                                                frameborder="0"
+                                                                title="Redacted PDF Document">
+                                                            <div class="text-center p-3">
+                                                                <div class="alert alert-warning">
+                                                                    <p class="mb-2">PDF viewer not supported.</p>
+                                                                    <a href="@RedactedDocumentUrl" target="_blank" class="btn btn-sm btn-primary">Download Redacted</a>
+                                                                </div>
+                                                            </div>
+                                                        </iframe>
                                                     </div>
                                                 </div>
-                                            </iframe>
+                                            </div>
                                         </div>
                                     }
                                     else
@@ -271,8 +322,8 @@
                                             <div class="spinner-border text-primary mb-3" role="status">
                                                 <span class="visually-hidden">Loading PDF...</span>
                                             </div>
-                                            <h5>Preparing PDF Document</h5>
-                                            <p class="text-muted">Please wait while we retrieve your redacted document...</p>
+                                            <h5>Preparing PDF Documents</h5>
+                                            <p class="text-muted">Please wait while we retrieve your documents for comparison...</p>
                                             @if (!string.IsNullOrEmpty(StatusMessage))
                                             {
                                                 <div class="mt-3">
@@ -281,7 +332,7 @@
                                             }
                                             <div class="mt-3">
                                                 <button class="btn btn-outline-primary" @onclick="ViewRedactedPdf">
-                                                    <i class="bi bi-arrow-clockwise"></i> Retry Loading PDF
+                                                    <i class="bi bi-arrow-clockwise"></i> Retry Loading PDFs
                                                 </button>
                                             </div>
                                         </div>
@@ -585,6 +636,8 @@
     private string JobResultsJson = string.Empty;
     private bool ShowPdfViewer = false;
     private string RedactedDocumentUrl = string.Empty;
+    private string SourceDocumentUrl = string.Empty;
+    private string UploadedFileName = string.Empty;
     private int CurrentStep = 1; // 1: Upload, 2: Processing, 3: Results
     private string ActiveTab = "pdf"; // Default tab for results view
     private bool ShowStatusToast = true; // Show toast by default when processing
@@ -618,6 +671,9 @@
             // Upload file to blob storage
             using var stream = SelectedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // 10MB limit
             var fileName = await BlobStorageService.UploadFileAsync(stream, SelectedFile.Name, SourceContainer);
+            
+            // Store the uploaded file name for later reference
+            UploadedFileName = fileName;
 
             StatusMessage = "Generating SAS URLs...";
             StateHasChanged();
@@ -625,6 +681,9 @@
             // Generate SAS URLs
             var sourceSasUrl = await BlobStorageService.GenerateSasUrl(SourceContainer, fileName, TimeSpan.FromHours(48));
             var targetSasUrl = await BlobStorageService.GenerateContainerSasUrl(TargetContainer, TimeSpan.FromHours(48));
+            
+            // Store the source document URL for later viewing
+            SourceDocumentUrl = $"/api/pdf/view/{SourceContainer}/{Uri.EscapeDataString(fileName)}";
 
             StatusMessage = "Submitting PII detection job...";
             StateHasChanged();
@@ -812,6 +871,32 @@
     {
         ShowRedactedContent = false;
         StateHasChanged();
+    }
+
+    private async Task LoadSourceDocument()
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(UploadedFileName) && !string.IsNullOrEmpty(SourceContainer))
+            {
+                StatusMessage = "Loading original document...";
+                await InvokeAsync(StateHasChanged);
+                
+                SourceDocumentUrl = $"/api/pdf/view/{SourceContainer}/{Uri.EscapeDataString(UploadedFileName)}";
+                StatusMessage = "Original document loaded successfully.";
+                await InvokeAsync(StateHasChanged);
+            }
+            else
+            {
+                StatusMessage = "No original document information available.";
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error loading original document: {ex.Message}";
+            await InvokeAsync(StateHasChanged);
+        }
     }
 
     private async Task ViewRedactedPdf()
@@ -1009,6 +1094,8 @@
         JobResultsJson = string.Empty;
         ShowPdfViewer = false;
         RedactedDocumentUrl = string.Empty;
+        SourceDocumentUrl = string.Empty;
+        UploadedFileName = string.Empty;
         ShowStatusToast = true;
         StateHasChanged();
     }
