@@ -8,6 +8,12 @@
 
 A modern web application built with Blazor Server for detecting and redacting Personally Identifiable Information (PII) from PDF documents using Azure AI Foundry Language Service.
 
+## 📸 Application Preview
+
+![PII Redaction App - Side-by-Side Document Comparison](screenshot-comparison.png)
+
+_Side-by-side comparison showing original document (left) and redacted document (right) with PII automatically detected and masked by Azure AI_
+
 ## Disclaimer
 
 This sample code is provided for educational and demonstration purposes only. While created by a Microsoft employee based on official Azure AI Services documentation, this repository represents personal work and is not an official Microsoft product or service.
@@ -73,11 +79,38 @@ Navigate to `http://localhost:5186`
 
 ## Features
 
-- PDF upload with drag-and-drop interface
-- Real-time processing with progress tracking
-- Native document PII detection and redaction
-- Download both JSON results and redacted PDF documents
-- Secure Azure integration with SAS URLs
+- **📤 Drag-and-Drop PDF Upload** - Easy document upload with visual feedback
+- **⚡ Real-time Processing** - Live progress tracking with status updates
+- **🤖 AI-Powered PII Detection** - Azure AI Foundry Language Service integration
+- **📋 Side-by-Side Comparison** - View original and redacted documents simultaneously
+- **📊 Comprehensive Results** - Multiple output formats (PDF, JSON, Text, Reports)
+- **🔒 Secure Azure Integration** - SAS URLs and private container support
+
+## Application Showcase
+
+The application provides a modern, intuitive interface for PII detection and redaction with side-by-side document comparison.
+
+### Key Interface Features:
+
+1. **📊 Progress Tracking** - Visual step-by-step process indicators (Upload → Process → Review → Download)
+2. **📑 Tabbed Results Interface** - Clean organization of results across multiple tabs
+3. **👁️ Side-by-Side PDF Viewer** - Compare original and redacted documents in real-time
+4. **🏷️ Smart PII Detection** - Automatic identification and redaction of sensitive information including:
+   - Personal names (PERSON-2) → `[PERSON-2]`
+   - Organizations (ORGANIZATION-1) → `[ORGANIZATION-1]`
+   - Addresses, phone numbers, dates, and more
+5. **💾 Multiple Download Options** - Get results in various formats (PDF, JSON, Text, Report)
+6. **🔄 Real-time Status Updates** - Toast notifications and progress indicators
+
+### What Gets Redacted:
+
+The Azure AI service automatically detects and redacts various PII categories:
+
+- **Personal Information**: Names, addresses, phone numbers
+- **Medical Information**: Patient details, medical record numbers
+- **Financial Data**: Account numbers, credit card information
+- **Organizational Data**: Company names, employee IDs
+- **Temporal Data**: Dates, times, ages
 
 ## Documentation
 

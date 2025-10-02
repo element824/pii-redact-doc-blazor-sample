@@ -341,12 +341,12 @@ h1:focus {
   .pdf-comparison-container {
     height: auto;
   }
-  
+
   .pdf-viewer-container-comparison {
     height: 50vh;
     margin-bottom: 1rem;
   }
-  
+
   .col-md-6:last-child .pdf-viewer-container-comparison {
     margin-bottom: 0;
   }
